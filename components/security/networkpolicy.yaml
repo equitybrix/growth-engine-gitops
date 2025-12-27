@@ -1,0 +1,50 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: growth-engine-policy
+  namespace: growth-engine
+spec:
+  podSelector:
+    matchLabels:
+      app: growth-engine
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+    # Allow from Prometheus
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # Allow to shared services
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: shared-services
+      ports:
+        - protocol: TCP
+          port: 9200  # Elasticsearch
+        - protocol: TCP
+          port: 27017 # MongoDB
+        - protocol: TCP
+          port: 6379  # Redis
+        - protocol: TCP
+          port: 4000  # LiteLLM
+    # Allow DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53

@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: growth-engine-alerts
+  namespace: growth-engine
+spec:
+  groups:
+    - name: growth-engine.rules
+      interval: 30s
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job="growth-engine",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="growth-engine"}[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High error rate detected"
+            description: "Error rate is {{ $value | humanizePercentage }}"
+
+        - alert: HighLatency
+          expr: |
+            histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="growth-engine"}[5m])) > 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High latency detected"
+            description: "95th percentile latency is {{ $value }}s"
+
+        - alert: PodNotReady
+          expr: |
+            kube_pod_status_ready{namespace="growth-engine",condition="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} not ready"

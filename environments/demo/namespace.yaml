@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: growth-engine-demo
+  labels:
+    name: growth-engine-demo
+    environment: demo
+    app.kubernetes.io/name: growth-engine

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: growth-engine-qa
+  labels:
+    name: growth-engine-qa
+    environment: qa
+    app.kubernetes.io/name: growth-engine

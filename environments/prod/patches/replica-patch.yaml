@@ -1,0 +1,7 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: growth-engine-api
+  namespace: growth-engine-prod
+spec:
+  replicas: 3

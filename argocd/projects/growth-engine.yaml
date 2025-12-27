@@ -1,0 +1,77 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: growth-engine
+  namespace: argocd
+spec:
+  description: Growth Engine Project
+
+  # Source repositories
+  sourceRepos:
+    - https://github.com/equitybrix/growth-engine-gitops.git
+    - https://github.com/equitybrix/growth-engine.git
+
+  # Allowed destinations for non-prod (dev, qa, demo)
+  destinations:
+    - namespace: growth-engine-dev
+      server: https://kubernetes.default.svc
+    - namespace: growth-engine-qa
+      server: https://kubernetes.default.svc
+    - namespace: growth-engine-demo
+      server: https://kubernetes.default.svc
+
+  # Cluster resource whitelist
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+
+  # Namespace resource whitelist (what can be deployed)
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+
+  # Roles for RBAC
+  roles:
+    - name: developer
+      description: Developer access
+      policies:
+        - p, proj:growth-engine:developer, applications, get, growth-engine/*, allow
+        - p, proj:growth-engine:developer, applications, sync, growth-engine/*-dev, allow
+      groups:
+        - growth-engine-developers
+
+    - name: qa
+      description: QA access
+      policies:
+        - p, proj:growth-engine:qa, applications, get, growth-engine/*, allow
+        - p, proj:growth-engine:qa, applications, sync, growth-engine/*-qa, allow
+        - p, proj:growth-engine:qa, applications, sync, growth-engine/*-demo, allow
+      groups:
+        - growth-engine-qa
+
+    - name: admin
+      description: Admin access
+      policies:
+        - p, proj:growth-engine:admin, applications, *, growth-engine/*, allow
+      groups:
+        - growth-engine-admins

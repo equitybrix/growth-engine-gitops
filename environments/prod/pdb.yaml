@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: growth-engine-api
+  namespace: growth-engine-prod
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: growth-engine
+      component: api

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: growth-engine-config
+  namespace: growth-engine-demo
+data:
+  ENVIRONMENT: "demo"
+  LOG_LEVEL: "INFO"

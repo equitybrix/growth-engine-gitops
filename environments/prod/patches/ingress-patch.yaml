@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: growth-engine-api
+  namespace: growth-engine-prod
+spec:
+  tls:
+    - hosts:
+        - growth-engine.equitybrix.com
+      secretName: growth-engine-prod-tls
+  rules:
+    - host: growth-engine.equitybrix.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: growth-engine-api
+                port:
+                  number: 8000

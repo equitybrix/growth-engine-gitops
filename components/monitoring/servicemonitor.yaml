@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: growth-engine-api
+  namespace: growth-engine
+  labels:
+    app: growth-engine
+spec:
+  selector:
+    matchLabels:
+      app: growth-engine
+      component: api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: growth-engine-api
+  namespace: growth-engine
+  labels:
+    app: growth-engine
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: growth-engine
+      component: api
+  template:
+    metadata:
+      labels:
+        app: growth-engine
+        component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: growth-engine
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: api
+          image: ghcr.io/equitybrix/growth-engine:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: growth-engine-config
+                  key: ENVIRONMENT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: growth-engine-config
+                  key: LOG_LEVEL
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: growth-engine-config
+                  key: ELASTICSEARCH_URL
+            - name: MONGODB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: growth-engine-secrets
+                  key: MONGODB_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: growth-engine-secrets
+                  key: REDIS_URL
+            - name: LITELLM_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: growth-engine-config
+                  key: LITELLM_BASE_URL
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: growth-engine-secrets
+                  key: LITELLM_API_KEY
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      restartPolicy: Always

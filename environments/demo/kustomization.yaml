@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: growth-engine-demo
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+components:
+  - ../../components/monitoring
+
+images:
+  - name: ghcr.io/equitybrix/growth-engine
+    newTag: demo-v1.0.0  # Updated by CI/CD pipeline
+
+patches:
+  - path: patches/configmap-patch.yaml
+  - path: patches/replica-patch.yaml
+  - path: patches/ingress-patch.yaml
+
+configMapGenerator:
+  - name: growth-engine-config
+    behavior: merge
+    literals:
+      - ENVIRONMENT=demo
+      - LOG_LEVEL=INFO

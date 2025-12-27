@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: growth-engine-api
+  namespace: growth-engine
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - growth-engine.equitybrix.com
+      secretName: growth-engine-tls
+  rules:
+    - host: growth-engine.equitybrix.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: growth-engine-api
+                port:
+                  number: 8000

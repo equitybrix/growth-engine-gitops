@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: growth-engine
+  namespace: argocd
+spec:
+  description: Growth Engine Project - Production
+
+  # Source repositories
+  sourceRepos:
+    - https://github.com/equitybrix/growth-engine-gitops.git
+    - https://github.com/equitybrix/growth-engine.git
+
+  # Allowed destination for production only
+  destinations:
+    - namespace: growth-engine-prod
+      server: https://kubernetes.default.svc
+
+  # Cluster resource whitelist
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+
+  # Namespace resource whitelist
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+
+  # Roles for RBAC (production requires admin)
+  roles:
+    - name: admin
+      description: Production admin access
+      policies:
+        - p, proj:growth-engine:admin, applications, *, growth-engine/*, allow
+      groups:
+        - growth-engine-prod-admins

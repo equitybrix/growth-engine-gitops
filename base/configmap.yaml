@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: growth-engine-config
+  namespace: growth-engine
+data:
+  ENVIRONMENT: "development"
+  LOG_LEVEL: "INFO"
+  ELASTICSEARCH_URL: "http://elasticsearch.shared-services.svc.cluster.local:9200"
+  LITELLM_BASE_URL: "http://litellm.shared-services.svc.cluster.local:4000"

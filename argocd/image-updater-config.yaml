@@ -1,0 +1,122 @@
+# Argo CD Image Updater Configuration
+#
+# This file documents the Image Updater setup for Growth Engine.
+# The actual configuration is done via annotations on Application resources.
+#
+# Image Updater automatically checks for new images and updates the GitOps repo.
+
+---
+# Registry Configuration
+# Image Updater pulls from GitHub Container Registry (ghcr.io)
+
+registries:
+  - name: ghcr
+    api_url: https://ghcr.io
+    prefix: ghcr.io
+    credentials: secret:argocd/github-token#token
+    default: true
+
+---
+# Git Write-Back Configuration
+# Image Updater commits changes back to this repository
+
+git:
+  user: argocd-image-updater
+  email: argocd-image-updater@equitybrix.com
+  commit_message_template: |
+    chore: Update {{.AppName}} image to {{.NewTag}}
+
+    - Application: {{.AppName}}
+    - Image: {{.Image}}
+    - Old Tag: {{.OldTag}}
+    - New Tag: {{.NewTag}}
+
+    Updated by Argo CD Image Updater
+
+---
+# Update Strategy by Environment
+
+environments:
+  dev:
+    image: ghcr.io/equitybrix/growth-engine
+    update_strategy: latest
+    tag_pattern: ^sha-[a-f0-9]{7}$
+    description: "Automatically updates to latest commit hash from main branch"
+
+  qa:
+    image: ghcr.io/equitybrix/growth-engine
+    update_strategy: semver
+    tag_pattern: ^qa-v[0-9]+\.[0-9]+\.[0-9]+$
+    description: "Automatically updates to latest QA semver tag"
+
+  demo:
+    image: ghcr.io/equitybrix/growth-engine
+    update_strategy: semver
+    tag_pattern: ^demo-v[0-9]+\.[0-9]+\.[0-9]+$
+    description: "Automatically updates to latest Demo semver tag"
+
+  prod:
+    image: ghcr.io/equitybrix/growth-engine
+    update_strategy: digest
+    tag_pattern: ^v[0-9]+\.[0-9]+\.[0-9]+$
+    description: "Digest-based updates only - effectively disabled for manual control"
+
+---
+# Annotation Reference
+#
+# The following annotations are used on Application resources:
+#
+# argocd-image-updater.argoproj.io/image-list
+#   - Format: alias=image-name
+#   - Example: api=ghcr.io/equitybrix/growth-engine
+#
+# argocd-image-updater.argoproj.io/api.update-strategy
+#   - Values: latest, semver, digest, name
+#   - latest: Most recently pushed image
+#   - semver: Semantic versioning (e.g., v1.0.0)
+#   - digest: Only update on digest change (manual control)
+#
+# argocd-image-updater.argoproj.io/api.allow-tags
+#   - Format: regexp:^pattern$
+#   - Filters which tags to consider for updates
+#
+# argocd-image-updater.argoproj.io/write-back-method
+#   - Values: git, argocd
+#   - git: Commit changes to Git repository
+#   - argocd: Update in ArgoCD (ephemeral)
+#
+# argocd-image-updater.argoproj.io/git-branch
+#   - The branch to commit changes to
+#   - Default: main
+
+---
+# Monitoring Image Updater
+
+# Check Image Updater logs
+# kubectl logs -f deployment/argocd-image-updater -n argocd
+
+# View last update time on Application
+# kubectl get app growth-engine-dev -n argocd -o jsonpath='{.status.summary.images}'
+
+# Force image update check
+# argocd app get growth-engine-dev --refresh
+
+---
+# Troubleshooting
+
+# Common Issues:
+#
+# 1. Image not updating
+#    - Check if tag matches the allow-tags pattern
+#    - Verify registry credentials in ArgoCD secret
+#    - Check Image Updater logs for errors
+#
+# 2. Git commit failures
+#    - Ensure GitHub token has repo write permissions
+#    - Check if branch protection rules allow bot commits
+#    - Verify git user/email configuration
+#
+# 3. Wrong image version selected
+#    - Review update-strategy (latest vs semver)
+#    - Check allow-tags regexp pattern
+#    - Verify image tags in registry

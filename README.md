@@ -32,24 +32,28 @@ growth-engine-gitops/
 
 ## Deployment Workflow
 
+**Automated with Argo CD Image Updater** - Images are automatically detected and deployed when pushed to GHCR.
+
 ### Non-Prod Environments (Dev, QA, Demo)
 
 1. **Dev**: Auto-deploys on merge to `main` branch
    ```bash
-   git tag qa-v1.0.0
-   git push origin qa-v1.0.0
+   # CI pushes sha-abc123 tag
+   # Image Updater detects and auto-updates within 2 minutes
    ```
 
 2. **QA**: Deploy via `qa-v*` tag
    ```bash
    git tag qa-v1.0.0
    git push origin qa-v1.0.0
+   # Image Updater auto-updates to latest QA semver tag
    ```
 
 3. **Demo**: Deploy via `demo-v*` tag
    ```bash
    git tag demo-v1.0.0
    git push origin demo-v1.0.0
+   # Image Updater auto-updates to latest Demo semver tag
    ```
 
 ### Production Environment
@@ -111,12 +115,24 @@ argocd app history growth-engine-prod
 argocd app rollback growth-engine-prod <REVISION_NUMBER>
 ```
 
+## Image Updates
+
+This repository uses **Argo CD Image Updater** to automatically detect new images:
+
+- **Dev**: Monitors for `sha-*` tags (latest strategy)
+- **QA**: Monitors for `qa-v*` tags (semver strategy)
+- **Demo**: Monitors for `demo-v*` tags (semver strategy)
+- **Prod**: Manual sync only (digest strategy)
+
+See [IMAGE_UPDATER.md](IMAGE_UPDATER.md) for complete documentation.
+
 ## Contributing
 
 1. All changes should go through the main `growth-engine` repository
 2. CI/CD pipeline automatically updates this GitOps repo
-3. Never commit directly to this repository manually
-4. For emergency fixes, create a PR and get approval
+3. Argo CD Image Updater automatically commits image tag updates
+4. Never commit directly to this repository manually
+5. For emergency fixes, create a PR and get approval
 
 ## Contact
 

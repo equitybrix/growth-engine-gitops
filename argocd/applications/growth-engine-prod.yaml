@@ -3,6 +3,15 @@ kind: Application
 metadata:
   name: growth-engine-prod
   namespace: argocd
+  annotations:
+    # Argo CD Image Updater configuration
+    argocd-image-updater.argoproj.io/image-list: api=ghcr.io/equitybrix/growth-engine
+    argocd-image-updater.argoproj.io/api.update-strategy: semver
+    argocd-image-updater.argoproj.io/api.allow-tags: regexp:^v[0-9]+\.[0-9]+\.[0-9]+$
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+    # Production requires manual approval - disable auto-update
+    argocd-image-updater.argoproj.io/update-strategy: digest
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
